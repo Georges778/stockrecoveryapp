@@ -1,39 +1,87 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
-<meta charset="UTF-8" />
-<title>Stock Recovery Finder - Demo</title>
-<style>
-  body { font-family: Arial, sans-serif; margin: 20px; }
-  h1 { margin-bottom: 10px; }
-  .stock { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
-</style>
+  <meta charset="UTF-8" />
+  <title>Stock Recovery App corrigée</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+    .red { color: red; }
+    .green { color: green; }
+  </style>
 </head>
 <body>
-<h1>Stock Recovery Finder - Démo</h1>
-<div id="stocks"></div>
-<script>
-  const stocks = [
-    { symbol: "XYZ", name: "BigTech Co.", marketCap: 120, drop: 55, rebound: 7 },
-    { symbol: "ABC", name: "EnergyCorp", marketCap: 95, drop: 60, rebound: 9 },
-    { symbol: "DEF", name: "RetailGroup", marketCap: 15, drop: 52, rebound: 5 }
-  ];
 
-  function displayStocks() {
-    const container = document.getElementById("stocks");
-    container.innerHTML = "";
-    stocks.forEach(stock => {
-      const div = document.createElement("div");
-      div.className = "stock";
-      div.innerHTML = `<strong>${stock.name} (${stock.symbol})</strong><br/>
-        Capitalisation: ${stock.marketCap} milliards $<br/>
-        Chute: ${stock.drop}%<br/>
-        Rebond: ${stock.rebound}%`;
-      container.appendChild(div);
-    });
+  <h1>Big Caps en chute de 50% ou plus avec rebond ≥ 5%</h1>
+  <p>Analyse automatique corrigée sur prix non ajustés et détection rebond</p>
+
+  <table id="results">
+    <thead>
+      <tr>
+        <th>Société</th>
+        <th>Plus haut ($)</th>
+        <th>Plus bas ($)</th>
+        <th>Actuel ($)</th>
+        <th>Chute (%)</th>
+        <th>Rebond (%)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+<script>
+  const apiKey = "QL1R3UX74SOIR3N1"; // Ta clé Alpha Vantage
+  const symbols = ["AAPL", "META", "BABA", "PYPL", "SHOP", "NFLX"];
+
+  const tbody = document.querySelector("#results tbody");
+
+  async function analyserSymbol(symbole) {
+    const url = `https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY&symbol=${symbole}&apikey=${apiKey}`;
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+
+      const timeSeries = data["Monthly Time Series"];
+      if (!timeSeries) {
+        console.warn(`Pas de données pour ${symbole}`);
+        return;
+      }
+
+      let plusHaut = 0;
+      let plusBas = Number.MAX_VALUE;
+      let dernierPrix = null;
+
+      for (const date in timeSeries) {
+        const close = parseFloat(timeSeries[date]["4. close"]);
+        if (close > plusHaut) plusHaut = close;
+        if (close < plusBas) plusBas = close;
+        if (!dernierPrix) dernierPrix = close;
+      }
+
+      const chute = ((plusHaut - dernierPrix) / plusHaut) * 100;
+      const rebond = ((dernierPrix - plusBas) / plusBas) * 100;
+
+      if (chute >= 50 && rebond >= 5) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${symbole}</td>
+          <td>${plusHaut.toFixed(2)}</td>
+          <td>${plusBas.toFixed(2)}</td>
+          <td>${dernierPrix.toFixed(2)}</td>
+          <td class="red">-${chute.toFixed(1)}%</td>
+          <td class="green">+${rebond.toFixed(1)}%</td>
+        `;
+        tbody.appendChild(row);
+      }
+
+    } catch (err) {
+      console.error(`Erreur pour ${symbole}:`, err);
+    }
   }
 
-  displayStocks();
+  symbols.forEach(symbole => analyserSymbol(symbole));
 </script>
+
 </body>
 </html> 
