@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Stock Recovery Finder - Demo</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  h1 { margin-bottom: 10px; }
+  .stock { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<h1>Stock Recovery Finder - Démo</h1>
+<div id="stocks"></div>
+<script>
+  const stocks = [
+    { symbol: "XYZ", name: "BigTech Co.", marketCap: 120, drop: 55, rebound: 7 },
+    { symbol: "ABC", name: "EnergyCorp", marketCap: 95, drop: 60, rebound: 9 },
+    { symbol: "DEF", name: "RetailGroup", marketCap: 15, drop: 52, rebound: 5 }
+  ];
+
+  function displayStocks() {
+    const container = document.getElementById("stocks");
+    container.innerHTML = "";
+    stocks.forEach(stock => {
+      const div = document.createElement("div");
+      div.className = "stock";
+      div.innerHTML = `<strong>${stock.name} (${stock.symbol})</strong><br/>
+        Capitalisation: ${stock.marketCap} milliards $<br/>
+        Chute: ${stock.drop}%<br/>
+        Rebond: ${stock.rebound}%`;
+      container.appendChild(div);
+    });
+  }
+
+  displayStocks();
+</script>
+</body>
+</html> 
